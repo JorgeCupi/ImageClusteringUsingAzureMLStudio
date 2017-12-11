@@ -311,5 +311,105 @@ Basically, the script above:
 You can find the script from above in the **toCSV.py** file located in the [code folder](https://github.com/JorgeCupi/ImageClusteringUsingAzureMLStudio/tree/master/code) from this repo.
 
 ## Clustering with Azure ML Studio ##
+### Uploading our dataset ###
+Now that we have our dataset (both training and test) ready we'll upload them to [Azure Machine Learning Studio](https://studio.azureml.net/) using our Microsoft Account. Once we have signed in we just click on the **+New** button on the bottom left side of the page. We must do this for both our datasets and when we're doing it we should select the **Generic CSV file with no header** option at the **Select a type for the new dataset** option:
 
-## Conclusion and results ##
+![Image: Uploading our datasets](images/uploadingDatasets.png)
+
+### Using an existing K-Means project in ML Studio ###
+Once our files have been uploaded we'll create a new experiment by clicking the **+New** button again except that this time we'll select the **Experiment** option and we'll type **Iris** or **clustering** in the search bar:
+
+![Image: Choosing the Iris clustering experiment](images/irisExperiment.png)
+
+Then we'll put the mouse pointer over the Iris experiment and click on **Open in Studio** option to see how the next modules are being loaded:
+
+![Image: Iris clustering experiment template](images/irisModules.png)
+
+### Cleaning the project and adding our datasets ###
+We can delete the first 4 modules from our model:
+- Import data
+- Clean missing data
+- Edit metadata
+- Split data
+
+![Image: Cleaning the experiment](images/cleaningExperiment.png)
+
+We won't need a split data module because we already did this with manually and created to datasets using Python: our training and test datasets. We also don't need a cleaning module since we know our data is clean. Now, we just have to add our datasets and indeed we'll add a new Edit Metadata module to set our first column as a label:
+
+![Image: Adding our datasets](images/addingDatasets.png)
+
+### Understanding K-Means ###
+Before using K-Means we should understand how it works. Without entering into deep math and statistic details, K-Means is a popular unsupervised learning algorithm that is useful for scenarios like:
+- Anomaly detection
+- Data clustering
+- Analysis of datasets prior to use of classification or regression algorithms.
+
+K-Means has this clustering capabilities thanks to the use of [Lloyd's Algorithm](https://en.wikipedia.org/wiki/Lloyd's_algorithm) that measures the distances between the features of our datasets and creates centroids that will group our data depending on the distances calculated. At the beginning of the algorithm these centroids are given a random position and their position changes as the distance calculation occurs.
+
+The algorithm ends when the centroids positions stabilize (meaning that the positions stopped changing even with new data arriving) or if the number of iterations defined have already occured.
+
+### Setting up K-Means in Azure ML ###
+If we click on the [K-Means](https://msdn.microsoft.com/en-us/library/azure/dn905944.aspx) module in our experiment we'll notice we are able to modify the next parameters:
+- **Create trainer mode**: Defines if we know what features we want to use for the clustering or if we will use all or a range of them. We'll choose **Single parameter**
+- **Number of centroids**: Defines the number of starter centroids for our algorithm. We'll choose 9 (This doesn't mean that the model will exactly output 9 clusters, the number will increase or decrease according the the distance calculation of our features)
+- **Initialization**: Defines the K-means algorithm that will be used for the experiment. We'll use the standard **K-means++** algorithm
+- **Random number seed**: Optional parameter to determine the initial seeding for our clustering algorithm.
+- **Metric**: It's the function that we'll use to measure the distance between our features. We'll choose **Cosine**
+- **Iterations**: Defines the number of iterations(epochs) that our algorithm will run during its training. We'll use **200**
+- **Assign label column**: Allows us to define if we want to ignore the Label column or if we want to use it to improve the clustering
+
+### Setting up and understanding Multiclass Logistic Regression ###
+We'll use **K-Means** to cluster our flower images but at the same time we'll leverage the [Multiclass Logistic Regression](https://msdn.microsoft.com/en-us/library/azure/dn905853.aspx) module to make some benchmarking. This regression module is very popular in the supervised learning algorithms field and allow us to predict multiple label based on a already labeled dataset.
+
+If we select its module in our experiment we'll see the next parameters:
+- **Create trainer mode**: Same as K-Means, defines if we know what features we want to use for the clustering or if we will use all or a range of them. We'll choose **Single parameter**. Note that if we weren't sure of which parameters to use we could leverage modules like [Tune Model Hyperparameters](https://msdn.microsoft.com/en-us/library/azure/dn905810.aspx) so a ML model helps us determine the best features for our regression model.
+- **Optimization tolerance**: Determines a numeric value for optimization convergence. If the improvement between iterations es less that this value then the model will finish its training. We'll put a minimum value like **1E-07**
+- **L1 and L2 regularization weight**: They are recommended to be greater than 0 and are useful to prevent overfitting by penalizing the model with high coeficient values. We'll put a value of **1** in both
+- **Memory size for L-BGFS**: Determines the memory size to be used by the algorithm. L-BFGS stands for **Limited memory Broyden-Fletcher-Goldfarb-Shanno
+- **Random number seed**: Defines the seeding initialization
+- **Allow unknown catergorical levels**: Option that allows us to create a **unknown** element in each categorical feature
+
+### Setting up the Train Clustering Model and Train Model ###
+If we click on our **Train Clustering Model** module we'll see that it has an option to launch a column selector. Once that screen is launched we'll configure the selector in such a way that the model will exclude the Label column by excluding the column with name **Col1**:
+
+![Image: Excluding the label](images/excludingColumns.png)
+
+>NOTE: ML Studio generates names for our columns since our datasets arrived with no names. That's why our label its in the column **Col1**
+
+On the other hand, at the **Train Model** module we'll also launch the column selector but this time we'll ask it to explicitly select **Col1** as our label since the Multiclass Classification Regression algorithm needs a label to work with. 
+
+### Assign to Cluster and Score model modules ###
+These are the modules where we put our test datasets and use them against our trained modules:
+- **Assign to cluster** receives the results from the **K-Means** module
+- **Score model** takes the results from the **Multiclass** module
+
+Both modules receive the **test Dataset** as a second parameter.
+
+## Results ##
+### K-Means results ###
+We can find our results in the **Select columns in dataset** module below the **Assign to Cluster** module that picked just the Label column (named **Col1**) and a new column generated by the trained K-Means module called **Assignments**
+
+If we click on the **Visualize** option located at the bottom of the **Select columns in dataset** we'll find the next:
+
+![Image: Visualizing our K-Means result](images/kmeansResult.png)
+
+The results are abysmal. Our K-Means clustering model barely identified 2 clusters called 1 and 0. We can see some trends:
+- Bellflower, Peony, Leucanthemum and Rudbec we're mostly classified as **0**
+- Viola, Rose and Aquilegia were classified as **1**
+
+No matter the trend, such poor results leads us to several questions but before adressing them lets see the results from Multiclass.
+
+### Multiclass results ###
+Located in the **Evaluate Model** module we can observe the following:
+
+![Image: Visualizing our Multiclass result](images/multiclassResult.png)
+
+Not as bad as the K-Means results but these results are nowhere decent. There's an average accuracy of 86% but barely 33% of precision. 
+
+## Conclusions and next steps ##
+No matter how we look at these results. We have poor performance and it could be because of multiple factors:
+- Dataset is too small
+- The K-Means and Multiclass algorithms are not the best at handling images
+- The K-Means and Multiclass algorithms are not the best at handling small datasets (in terms of samples quantity, not features quantity)
+
+In a future update on this post we'll see what happens if we use a larger dataset with the same algorithms
