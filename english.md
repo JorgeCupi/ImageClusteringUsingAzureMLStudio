@@ -308,7 +308,7 @@ Basically, the script above:
 - Then a final array called **finalArray** adds the newly flattened and labeled image 
 - Once all the images from a given folder have been added to the **finalArray** array then we write a csv file
 
-You can find the script from above in the **toCSV.py** file located in the [code folder]((https://github.com/JorgeCupi/ImageClusteringUsingAzureMLStudio/tree/master/code) from this repo.
+You can find the script from above in the **toCSV.py** file located in the [code folder](https://github.com/JorgeCupi/ImageClusteringUsingAzureMLStudio/tree/master/code) from this repo.
 
 ## Clustering with Azure ML Studio ##
 
