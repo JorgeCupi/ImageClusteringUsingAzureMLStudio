@@ -175,7 +175,141 @@ Per every image found in the original training and test folders the script will 
  
 The code can be found in the [code folder](https://github.com/JorgeCupi/ImageClusteringUsingAzureMLStudio/tree/master/code) at the root directory of this repo. If you have JPEG files then just change the extension in the line 18 of the code.
 
- 
+### Turning our images into a CSV file ###
+Recall we have to represent our image as an array of its pixel color values:
+```python
+image = [
+[ [1,2,3], [4,5,6] ],
+[ [7,8,9], [0,1,2] ]
+]
+```
+to 
+
+```python
+image = [ [1,2,3], [4,5,6], [7,8,9], [0,1,2] ]
+```
+to
+```python
+flatImage = [1,2,3,4,5,6,7,8,9,0,1,2]
+```
+
+Thankfully, doing this is as easy as it gets in Python:
+```python
+flatImage = image.flatten()
+```
+That's it! We have to this to every image in our training and test set folders. We could also aditionally add a label column (the dataset has a separate csv file with the names of every flower) before creating our csv files with labels and features.
+
+#### Opening the csv file with the original labels ####
+Given that we've already split our data into training and testing:
+- We'll duplicate our "flower-labels" csv file and have training and a test versions, the first file containing the first 168 labels and the second one containing the remaining 42 labels. 
+- We'll also remove the first row as it just contains text specifying that column A belongs to the image name and that column B contains the label assigned to it.
+- To have more 'meaningful' results we'll also replace the numeric values of the labels to the flower names (the names can be found in the dataset original link in Kaggle)
+
+In short we'll go from here:
+
+![Image: Original label csv file](images/oldcsvfile.png)
+
+to here:
+
+![Image: New label csv files](images/newcsvfile.png)
+
+Remember we now have two csv files: *testLabels.csv* and *trainingLabels.csv*
+
+To open both files we simply need code like this:
+```python
+import csv
+labels = []
+fileTraining = open('trainingLabels.csv')
+reader = csv.reader(fileTraining)
+trainingLabels = list(reader)
+labels.append(trainingLabels)
+fileTest = open('testLabels.csv')
+reader = csv.reader(fileTest)
+testLabels = list(reader)
+labels.append(testLabels)
+```
+
+
+#### Creating our csv file ####
+After flatenning our images to 1 dimension arrays we'll also add a first column containing the labels we have obtained from our csv files with similar code like this:
+
+```python
+flatImage[:0] = 'Label obtained from the CSV files'
+```
+We'll have to iterate over our test and training set folders to do this flattening process and create a single array containing all our flatten images:
+```python
+images= []
+images.append[flatImageOne]
+images.append[flatImageTwo]
+# lots of appends later
+images.append[flatImageN]
+```
+
+Once we have that array we'll finally create two CSV files for our training and test dataset respectively:
+```python
+with open("fileName.csv", "wb") as f: 
+    writer = csv.writer(f)
+    writer.writerows(imagenes)
+```
+
+Don't worry, here's a complete version of the code:
+```python
+import numpy as np
+import csv
+from PIL import Image
+import os
+import csv
+
+rootdir = ['./trainingSet/','./testSet/']
+csvFiles = ['trainingSet.csv','testSet.csv']
+
+labels = []
+fileTraining = open('trainingLabels.csv')
+reader = csv.reader(fileTraining)
+trainingLabels = list(reader)
+labels.append(trainingLabels)
+fileTest = open('testLabels.csv')
+reader = csv.reader(fileTest)
+testLabels = list(reader)
+labels.append(testLabels)
+
+j=0
+k=0
+finalArray = []
+for directory in rootdir:
+    currentLabels = labels[k]
+    for subdir, dirs, files in os.walk(directory):
+        for file in files:
+            fileName = subdir+file
+            myImage = np.array(Image.open(fileName))
+            myArray = myImage.flatten()
+            imageArray = myArray.tolist()
+            imageArray[:0]=[currentLabels[j]]
+            finalArray.append(imageArray)
+            j = j + 1
+        print(directory+ " images flat proccess completed")
+
+        with open(csvFiles[k], "wb") as f: 
+            writer = csv.writer(f)
+            writer.writerows(finalArray)
+        print(csvFiles[k]+ " written successfully")
+        finalArray = []
+        j = 0
+        k = k + 1
+```
+### Understaning the flattening process and array to csv file script ###
+Basically, the script above: 
+- Grabs our **trainingSet** and **testSet** folders to iterate over them
+- But before the iteration takes place it reads our two label csv files, reads them and converts them into two arrays
+- Then those two arrays are elements of a bigger array named **labels**
+- Once the iteration begins the script opens one folder at a time and also loads the corresponding label array into a new array called **currentLabels**
+- Then, one image at a time, it flattens them and adds them to a list called **imageArray**
+- After the flatenning process, it grabs the corresponding label value from the **currentLabels** array and puts it as the first column of our array **imageArray**
+- Then a final array called **finalArray** adds the newly flattened and labeled image 
+- Once all the images from a given folder have been added to the **finalArray** array then we write a csv file
+
+You can find the script from above in the **toCSV.py** file located in the [code folder]((https://github.com/JorgeCupi/ImageClusteringUsingAzureMLStudio/tree/master/code)) from this repo.
+
 ## Clustering with Azure ML Studio ##
 
 ## Conclusion and results ##
