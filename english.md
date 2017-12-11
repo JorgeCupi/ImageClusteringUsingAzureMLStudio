@@ -129,6 +129,10 @@ We'll use the [Flower color images](https://www.kaggle.com/olgabelitskaya/flower
 ### Analizing the dataset ###
 There are 210 images and all of them have 128px x 128px, so that means that per each image we'll have 49152 feautures (remember the RGB values of each pixel)
 
+Since we have 210 images we'll take 80% of them (168) and put them into a folder called **trainingSet** and the remaining 20% (42) pictures will go into a folder called **testSet**.
+
+#### Are 210 images enough? ####
+Most of the times they are not but there are good algorithms that can make classification and clustering happen with just around a couple of images, however most algorithms take datasets of thousands of samples to have a proper training.
 #### Is it important that the images have the same pixel size? ####
 It is! Remeber that each pixel with its 3 color values will represent a feauture for our algorithms. If we had a 128x128 image and then another one of 128x156 pixels the difference between them in terms of features would be huge:
 - First image = 128x128x3 = 49152
@@ -150,37 +154,26 @@ import os
 
 rootdirs = ['./trainingSet/','./testSet/']
 resizedFolder = ['./resizedTrainingSet/','./resizedTestSet/']
+os.makedirs(resizedFolder[0])
+os.makedirs(resizedFolder[1])
 i=0
 j=0
-k=0
 myDirs = []
-myResizedFolders = []
-folderNames = []
 for x in rootdirs:
     for subdir, dirs, files in os.walk(x):
-        if len(dirs) >0:    
-            for folder in dirs:
-                os.makedirs(resizedFolders[k]+folder)
-                myResizedFolders.append(resizedFolders[k]+folder)
-                folderNames.append(folder)
-        else:
-            for file in files:
-                    im = Image.open(x+folderNames[j]+'/'+file)
-                    imResize = im.resize((128,128), Image.ANTIALIAS)
-                    imResize.save(myResizedFolders[j]+'/'+ str(i)+'.jpg', 'JPEG', quality=90)
-                    i=i+1
-            j=j+1
-    k = k+1
-    j=0
-    myResizedFolders = []
-    folderNames = []
+        for file in files:
+            i=i+1
+            im = Image.open(x+file)
+            imResize = im.resize((128,128), Image.ANTIALIAS)
+            imResize.save(resizedFolder[j]+ str(i)+'.png', 'PNG', quality=90)
+        j=j+1
 ```
 ### Understanding the resizing script ###
 The script above asumes you already have 2 folders called **trainingSet** and **testSet** with your data split in a training and a test set. Once the script runs it will create two new folders called **resizedTrainingSet** and **resizedTestSet**.
 
 Per every image found in the original training and test folders the script will open an image, change the size to 128 x 128 pixels and save it to its respective training or test new resized folder. 
-
-**The code can be found in the 'code' folder at the root directory of this repo.**
+ 
+The code can be found in the [code folder](https://github.com/JorgeCupi/ImageClusteringUsingAzureMLStudio/tree/master/code) at the root directory of this repo. If you have JPEG files then just change the extension in the line 18 of the code.
 
  
 ## Clustering with Azure ML Studio ##
