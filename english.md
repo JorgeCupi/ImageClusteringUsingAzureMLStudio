@@ -412,4 +412,6 @@ No matter how we look at these results. We have poor performance and it could be
 - The K-Means and Multiclass algorithms are not the best at handling images
 - The K-Means and Multiclass algorithms are not the best at handling small datasets (in terms of samples quantity, not features quantity)
 
-In a future update on this post we'll see what happens if we use a larger dataset with the same algorithms
+>Spoiler alert: The dataset is fine but this algorithms work much better with BIG datasets
+
+In a future update on this post we'll see what happens if we use a larger dataset with the same algorithms for a growth state classification problem from a Microsoft client that wants to redefine the way they work on the agro industry.
