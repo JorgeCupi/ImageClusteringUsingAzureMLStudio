@@ -297,7 +297,7 @@ for directory in rootdir:
         j = 0
         k = k + 1
 ```
-### Understaning the flattening process and array to csv file script ###
+### Understanding the flattening process and array to csv file script ###
 Basically, the script above: 
 - Grabs our **trainingSet** and **testSet** folders to iterate over them
 - But before the iteration takes place it reads our two label csv files, reads them and converts them into two arrays
